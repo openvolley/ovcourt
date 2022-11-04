@@ -1,0 +1,48 @@
+Package: ovcourt
+Title: Court detection
+Version: 0.0.1
+Authors@R: c(person(given = "Ben", family = "Raymond", role = c("aut")),
+             person(given = "Adrien", family = "Ickowicz", role = c("aut", "cre"), email = "adrien@untan.gl"),
+             person("openvolley.org", role = "org"))
+Description: Automatic court detection functions for images.
+URL: https://github.com/openvolley/ovcourt
+BugReports: https://github.com/openvolley/ovcourt/issues
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+Depends: datavolley (> 0.12.999)
+Imports:
+    archive,
+    assertthat,
+    av,
+    base64enc,
+    cowplot,
+    digest,
+    dplyr,
+    farver,
+    fs,
+    ggplot2,
+    htmltools,
+    httr,
+    knitr,
+    image.LineSegmentDetector,
+    imager,
+    jpeg,
+    jsonlite,
+    magick,
+    R.utils,
+    rappdirs,
+    rlist,
+    sys,
+    tidyr,
+    T4transport
+Suggests:
+    editry,
+    future,
+    future.apply,
+    ovdata,
+    remotes,
+    testthat
+Remotes: openvolley/datavolley, openvolley/ovdata, scienceuntangled/editry
+RoxygenNote: 7.2.1

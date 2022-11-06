@@ -514,98 +514,99 @@ ov_detect_court <- function(image_file, video_file, t = 60,view.list = NULL,
         
         H <- court_df[[1]]$H
         crt_ref_e <- court_df[[1]]$court_ref
-        estimated_lines <- crt_ref_e %>% dplyr::select(-.data$score) %>%
-            tidyr::pivot_wider(names_from = "side", values_from = c("x", "y", "court_x", "court_y"))
-        
-        
-        estimated_lines_v <-crt_ref_e[c(1,2,9,10),] %>% dplyr::select(-.data$score) %>% tidyr::pivot_wider(names_from = "depth", values_from = c("x", "y", "court_x", "court_y"))
-        # plot(x)
-        # polygon(crt_ref_e$x[c(1,2,10,9)], crt_ref_e$y[c(1,2,10,9)], density = 25)
-        # polygon(crt_ref_e$x[c(3,4,8,7)], crt_ref_e$y[c(3,4,8,7)], density = 50)
-        # segments(x0 = estimated_lines$x_left[3], y0 = estimated_lines$y_left[3], x1 = estimated_lines$x_right[3], y1 = estimated_lines$y_right[3], col = "white")
-        
-        
-        
-        px_h <- do.call(c, lapply(seq_len(nrow(estimated_lines)), function(jjj) 
-            round(estimated_lines$x_left[jjj]):round(estimated_lines$x_right[jjj])))
-        px_h <- c(px_h, px_h, px_h, px_h - 1, px_h - 1)
-        py_h <- do.call(c, lapply(seq_len(nrow(estimated_lines)), function(jjj) {
-            alpha = seq(0,1, length.out = length(round(estimated_lines$x_left[jjj]):round(estimated_lines$x_right[jjj])))
-            floor((image_height - estimated_lines$y_right[jjj])*alpha + (image_height - estimated_lines$y_left[jjj]) * (1-alpha))}))
-        py_h <- c(py_h, py_h + 1, py_h - 1, py_h, py_h)
-        #py_h <- image_height - py_h
-        
-        py_v <- do.call(c, lapply(seq_len(nrow(estimated_lines_v)), function(jjj) 
-            round(image_height - estimated_lines_v$y_far[jjj]):round(image_height - estimated_lines_v$y_close[jjj])))
-        px_v <- do.call(c, lapply(seq_len(nrow(estimated_lines_v)), function(jjj) {
-            alpha = seq(0,1, length.out = length(round(estimated_lines_v$y_close[jjj]):round(estimated_lines_v$y_far[jjj])))
-            floor(estimated_lines_v$x_close[jjj]*alpha + estimated_lines_v$x_far[jjj] * (1-alpha))}))
-        
-        #test0 <- data.frame(x = px_v, y = py_v)
-        
-        px_v <- c(px_v, px_v, px_v, px_v - 1, px_v - 1)
-        py_v <- c(py_v, py_v + 1, py_v - 1, py_v, py_v)
-        
-        #test = data.frame(x = px_v, y = py_v)
-        
-        #py_v <- image_height - py_v
-        
-        ddh <- cbind(px_h, py_h)[which(px_h %in% seq_len(image_width) & py_h %in% seq_len(image_height)), ]
-        
-        ddv <- cbind(px_v, py_v)[which(px_v %in% seq_len(image_width) & py_v %in% seq_len(image_height)), ]
-        
-        # par(mfrow=c(3,2), mar = c(2,2,2,1))
-        # image(x = 1:image_height, y = 1:image_width ,z=  mat_dist, xlab = NULL, ylab = NULL)
-        # text(image_height - crt_ref_e$y, crt_ref_e$x ,labels = 1:nrow(crt_ref_e))
-        
-        pattern_i = matrix(farver::compare_colour(farver::decode_colour(court_colour), 
-                                                  farver::decode_colour(line_colour), "rgb", method = colour.distance), 
-                           ncol = image_width, nrow = image_height)
-        
-        pattern_i[ddh[,c(2,1)]] <- 0
-        pattern_i[ddv[,c(2,1)]] <- 0
-        
-        # image(x = 1:image_height, y = 1:image_width ,z=  pattern_i, xlab = NULL, ylab = NULL)
-        # text(image_height - crt_ref_e$y, crt_ref_e$x ,labels = 1:nrow(crt_ref_e))
-        
-        length.x = image_width / 40
-        length.y = image_height / 40
-        score.tmp = NULL
-        for(kk in 1:nrow(crt_ref_e)){
+        crt_ref_e_old <- crt_ref_e
+        ref <- court_df[[1]]$ref
+        # Change crt_ref_e one line at a time. 
+        for(kk in 1:nrow(ref)){
             browser()
-            
-            
-            cell_y = floor(seq.int(image_height -crt_ref_e$y[kk]-length.y/2, image_height -crt_ref_e$y[kk]+length.y/2))
-            cell_x = floor(seq.int(crt_ref_e$x[kk]-length.x/2, crt_ref_e$x[kk] + length.x/2))
-            
-            cell_y = cell_y[cell_y %in% seq_len(image_height)]
-            cell_x = cell_x[cell_x %in% seq_len(image_width)]
-            
-            cc_xy <- as.matrix(expand.grid(cell_y, cell_x))
-            #cc_xy <-cc_xy[which(cc_xy[,1] %in% seq_len(image_width) & cc_xy[,2] %in% seq_len(image_height)), ]
-            
-            est_pat = matrix(mat_dist[cc_xy], ncol = length(cell_x), byrow = FALSE)
-            the_pat = matrix(pattern_i[cc_xy], ncol = length(cell_x), byrow = FALSE)
-            old_est_pat = est_pat
-            old_score = crt_ref_e$score[kk]
-            old_the_pat = the_pat
-            
-            improved = TRUE
-            new_cre = c(crt_ref_e$x[kk],crt_ref_e$y[kk])
+            #
             for(coord in 1:2){
                 for(dir in c(-1,1)){
+                    improved = TRUE
                     while(improved){
-                        new_cre[coord] <- new_cre[coord] + dir
-                        cell_y = floor(seq.int(image_height -new_cre[2]-length.y/2, image_height -new_cre[2]+length.y/2))
-                        cell_x = floor(seq.int(new_cre[1]-length.x/2, new_cre[1] + length.x/2))
+                        
+                        ref$image_x[kk] <- ref$image_x[kk] + (dir * (coord == 1)) / image_width
+                        ref$image_y[kk] <- ref$image_y[kk] + (dir * (coord == 2)) / image_height
+                        
+                        idx <- if (nrow(ref) == 4) 1:4 else c(1, 2, 8, 9)
+                        PH <- do.call(rbind, lapply(idx, function(i) homography_transform(unlist(ref[i, c("court_x", "court_y")]), unlist(ref[i, c("image_x","image_y")]))))
+                        PH <- rbind(PH, c(rep(0, 8), 1))
+                        Hres <- solve(a = PH, b = matrix(c(rep(0, 8), 1), ncol = 1))
+                        H <- matrix(Hres, ncol = 3, byrow = TRUE)
+                        tmp <- apply(cbind(crt_ref$court_x, crt_ref$court_y, 1), 1, function(xx) H %*% matrix(xx, ncol = 1))
+                        crt_ref_e<- cbind(crt_ref, data.frame(x = tmp[1, ] / tmp[3, ] * image_width, y = tmp[2, ] / tmp[3, ] * image_height))
+                        
+                        estimated_lines <- crt_ref_e %>% 
+                            tidyr::pivot_wider(names_from = "side", values_from = c("x", "y", "court_x", "court_y"))
+                        
+                        
+                        estimated_lines_v <-crt_ref_e[c(1,2,9,10),] %>%  tidyr::pivot_wider(names_from = "depth", values_from = c("x", "y", "court_x", "court_y"))
+                        # plot(x)
+                        # polygon(crt_ref_e$x[c(1,2,10,9)], crt_ref_e$y[c(1,2,10,9)], density = 25)
+                        # polygon(crt_ref_e$x[c(3,4,8,7)], crt_ref_e$y[c(3,4,8,7)], density = 50)
+                        # segments(x0 = estimated_lines$x_left[3], y0 = estimated_lines$y_left[3], x1 = estimated_lines$x_right[3], y1 = estimated_lines$y_right[3], col = "white")
+                        
+                        
+                        
+                        px_h <- do.call(c, lapply(seq_len(nrow(estimated_lines)), function(jjj) 
+                            round(estimated_lines$x_left[jjj]):round(estimated_lines$x_right[jjj])))
+                        px_h <- c(px_h, px_h, px_h, px_h - 1, px_h - 1)
+                        py_h <- do.call(c, lapply(seq_len(nrow(estimated_lines)), function(jjj) {
+                            alpha = seq(0,1, length.out = length(round(estimated_lines$x_left[jjj]):round(estimated_lines$x_right[jjj])))
+                            floor((image_height - estimated_lines$y_right[jjj])*alpha + (image_height - estimated_lines$y_left[jjj]) * (1-alpha))}))
+                        py_h <- c(py_h, py_h + 1, py_h - 1, py_h, py_h)
+                        #py_h <- image_height - py_h
+                        
+                        py_v <- do.call(c, lapply(seq_len(nrow(estimated_lines_v)), function(jjj) 
+                            round(image_height - estimated_lines_v$y_far[jjj]):round(image_height - estimated_lines_v$y_close[jjj])))
+                        px_v <- do.call(c, lapply(seq_len(nrow(estimated_lines_v)), function(jjj) {
+                            alpha = seq(0,1, length.out = length(round(estimated_lines_v$y_close[jjj]):round(estimated_lines_v$y_far[jjj])))
+                            floor(estimated_lines_v$x_close[jjj]*alpha + estimated_lines_v$x_far[jjj] * (1-alpha))}))
+                        
+                        #test0 <- data.frame(x = px_v, y = py_v)
+                        
+                        px_v <- c(px_v, px_v, px_v, px_v - 1, px_v - 1)
+                        py_v <- c(py_v, py_v + 1, py_v - 1, py_v, py_v)
+                        
+                        #test = data.frame(x = px_v, y = py_v)
+                        
+                        #py_v <- image_height - py_v
+                        
+                        ddh <- cbind(px_h, py_h)[which(px_h %in% seq_len(image_width) & py_h %in% seq_len(image_height)), ]
+                        
+                        ddv <- cbind(px_v, py_v)[which(px_v %in% seq_len(image_width) & py_v %in% seq_len(image_height)), ]
+                        
+                        # par(mfrow=c(3,2), mar = c(2,2,2,1))
+                        # image(x = 1:image_height, y = 1:image_width ,z=  mat_dist, xlab = NULL, ylab = NULL)
+                        # text(image_height - crt_ref_e$y, crt_ref_e$x ,labels = 1:nrow(crt_ref_e))
+                        
+                        pattern_i = matrix(farver::compare_colour(farver::decode_colour(court_colour), 
+                                                                  farver::decode_colour(line_colour), "rgb", method = colour.distance), 
+                                           ncol = image_width, nrow = image_height)
+                        
+                        pattern_i[ddh[,c(2,1)]] <- 0
+                        pattern_i[ddv[,c(2,1)]] <- 0
+                        
+                        # image(x = 1:image_height, y = 1:image_width ,z=  pattern_i, xlab = NULL, ylab = NULL)
+                        # text(image_height - crt_ref_e$y, crt_ref_e$x ,labels = 1:nrow(crt_ref_e))
+                        
+                        length.x = image_width / 40
+                        length.y = image_height / 40
+                        score.tmp = NULL
+                        
+                        cell_y = floor(seq.int(image_height -crt_ref_e$y[kk]-length.y/2, image_height -crt_ref_e$y[kk]+length.y/2))
+                        cell_x = floor(seq.int(crt_ref_e$x[kk]-length.x/2, crt_ref_e$x[kk] + length.x/2))
                         
                         cell_y = cell_y[cell_y %in% seq_len(image_height)]
                         cell_x = cell_x[cell_x %in% seq_len(image_width)]
                         
                         cc_xy <- as.matrix(expand.grid(cell_y, cell_x))
+                        #cc_xy <-cc_xy[which(cc_xy[,1] %in% seq_len(image_width) & cc_xy[,2] %in% seq_len(image_height)), ]
                         
                         est_pat = matrix(mat_dist[cc_xy], ncol = length(cell_x), byrow = FALSE)
                         the_pat = matrix(pattern_i[cc_xy], ncol = length(cell_x), byrow = FALSE)
+                        #old_est_pat = est_pat
+                        old_score = court_df[[1]]$court_ref$score[kk]
                         
                         new_score = tryCatch({T4transport::ipot(est_pat, the_pat, lambda = lambda)$distance}, 
                                              error = function(cond) {
@@ -621,11 +622,12 @@ ov_detect_court <- function(image_file, video_file, t = 60,view.list = NULL,
                     }
                 }
             }
-            crt_ref_e$x[kk] <- new_cre[1]
-            crt_ref_e$y[kk] <- new_cre[2]
+            #list(score = score, H = H, ref = ref, court_ref = crt_ref_e, view = cc)
+            # crt_ref_e$x[kk] <- new_cre[1]
+            # crt_ref_e$y[kk] <- new_cre[2]
             #image(x = cell_y, y = cell_x, z= est_pat)
             #text(image_height - crt_ref_e$y[kk], crt_ref_e$x[kk], labels = kk)
-            
+            text(image_height - new_cre[2], new_cre[1], labels = kk)
             
             
             #contour(x = cell_y, y = cell_x, z= the_pat, add = TRUE, levels = 30, drawlabels = FALSE, lwd = 3)

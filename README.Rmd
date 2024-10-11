@@ -33,7 +33,7 @@ remotes::install_github("openvolley/ovcourt")
 
 This is a basic example which shows you how to solve a common problem:
 
-```{r example}
+```{r example, warning = FALSE, message = FALSE}
 library(ovcourt)
 
 image_file <- system.file("extdata/2019_03_01-KATS-BEDS-frame.png", package = "ovcourt")

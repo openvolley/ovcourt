@@ -17,4 +17,4 @@
 #' @importFrom rlist list.order
 #' @importFrom stats na.omit quantile setNames
 #' @importFrom utils tail combn
-NULL
+"_PACKAGE"

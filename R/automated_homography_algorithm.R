@@ -11,13 +11,13 @@
 #' @param score_distance string: Default to "colour-based". Calculate the likelihood of a homography based on the colour of the estimated lines locations
 #' @param line_colour string: colour of the lines for the courts. Default to "white"
 #' @param court_colour string: colour of the court. Default to "#c17257" (the orange-ish colour typical of synthetic-floor indoor courts)
-#' @param colour.distance string: 
-#' @param n.alpha numeric:
-#' @param lambda numeric:
+#' @param colour.distance string: as for the `method` parameter of [farver::compare_colour()]
+#' @param n.alpha numeric: length of alpha sequence to use
+#' @param lambda numeric: as for [T4transport::ipot()]
 #'
 #' @return A list of all possible homographies, with a score
 #'
-#' @seealso [ov_transform_points()], [datavolley::dv_court()],  [datavolley::ggcourt()]
+#' @seealso [ovideo::ov_transform_points()], [datavolley::dv_court()],  [datavolley::ggcourt()]
 #'
 #' @examples
 #' if (interactive()) {
@@ -25,26 +25,30 @@
 #'
 #'   ## Example 1
 #'   image_file <- system.file("extdata/2019_03_01-KATS-BEDS-court.jpg", package = "ovcourt")
-#'   court_df <- ov_detect_court(image_file = image_file, score_distance = "pattern-based", lambda = 1e3)
+#'   court_df <- ov_detect_court(image_file = image_file, score_distance = "pattern-based",
+#'                               lambda = 1e3)
 #'   ov_detect_court_plot(court_df, index = 1:4)
 #'   ov_plot_patterns(court_df, index = 1)
-#'   
+#'
 #'   ## Example 2 - with players
 #'   image_file <- system.file("extdata/2019_03_01-KATS-BEDS-frame.png", package = "ovcourt")
-#'   court_df <- ov_detect_court(image_file = image_file, score_distance = "pattern-based", lambda = 1e3)
+#'   court_df <- ov_detect_court(image_file = image_file, score_distance = "pattern-based",
+#'                               lambda = 1e3)
 #'   ov_detect_court_plot(court_df, index = 1:4, plot.all.endpoints = TRUE)
 #'   ov_plot_patterns(court_df, index = 1)
-#'   
+#'
 #'   ## Example 3 - Net issue
 #'   image_file <- system.file("extdata/2022_10_22M_CH_TE.png", package = "ovideo")
-#'   court_df <- ov_detect_court(image_file = image_file, score_distance = "pattern-based", lambda = 1e3)
+#'   court_df <- ov_detect_court(image_file = image_file, score_distance = "pattern-based",
+#'                               lambda = 1e3)
 #'   ov_detect_court_plot(court_df, index = 1:9, plot.all.endpoints = TRUE)
 #'  ov_plot_patterns(court_df, index = 1)
-#'  
+#'
 #'   ## Example 4 - Partial view and different court colour
 #'   image_file <- system.file("extdata/2022_10_30M_TE_MV.png", package = "ovideo")
-#'   court_df <- ov_detect_court(image_file = image_file, line_colour = "black", 
-#'   court_colour = "#858582", score_distance = "pattern-based", lambda = 1e5)
+#'   court_df <- ov_detect_court(image_file = image_file, line_colour = "black",
+#'                               court_colour = "#858582", score_distance = "pattern-based",
+#'                               lambda = 1e5)
 #'   ov_detect_court_plot(court_df, index = 1:4, plot.all.endpoints = TRUE)
 #'}
 #'
@@ -54,7 +58,7 @@ ov_detect_court <- function(image_file, video_file, t = 60,view.list = NULL,
                             line_colour = "white", court_colour = "#c17257", 
                             colour.distance = "cie2000", n.alpha = 50, lambda = 100) {
     if (missing(image_file) || is.null(image_file)) {
-        image_file <- ov_video_frame(video_file, t)
+        image_file <- ovideo::ov_video_frame(video_file, t)
     }
     if(is.null(view.list)){
         view.list = c("full court", "full 3m", "full half", "full 3m c")
@@ -518,7 +522,7 @@ ov_detect_court <- function(image_file, video_file, t = 60,view.list = NULL,
         ref <- court_df[[1]]$ref
         # Change crt_ref_e one line at a time. 
         for(kk in 1:nrow(ref)){
-            browser()
+            ## browser()
             #
             for(coord in 1:2){
                 for(dir in c(-1,1)){
@@ -627,7 +631,7 @@ ov_detect_court <- function(image_file, video_file, t = 60,view.list = NULL,
             # crt_ref_e$y[kk] <- new_cre[2]
             #image(x = cell_y, y = cell_x, z= est_pat)
             #text(image_height - crt_ref_e$y[kk], crt_ref_e$x[kk], labels = kk)
-            text(image_height - new_cre[2], new_cre[1], labels = kk)
+            #text(image_height - new_cre[2], new_cre[1], labels = kk)
             
             
             #contour(x = cell_y, y = cell_x, z= the_pat, add = TRUE, levels = 30, drawlabels = FALSE, lwd = 3)
@@ -717,6 +721,12 @@ ov_cluster <- function(lines, d_a = 5, d_b = 0.05){
     return(data_cl)
 }
 
+#' Plot the detected court homographies
+#'
+#' @param obj : as returned by [ov_detect_court()]
+#' @param index numeric: which homographies to plot
+#' @param model.filter : currently ignored
+#' @param plot.segments,plot.all.segments,plot.endpoints,plot.all.endpoints logical: control aspects of plot appearance
 #' @export
 ov_detect_court_plot <- function(obj, index = 1, model.filter = NULL, plot.segments = FALSE, plot.all.segments = FALSE, 
                                  plot.endpoints = FALSE, plot.all.endpoints = FALSE){
@@ -770,6 +780,11 @@ ov_detect_court_plot <- function(obj, index = 1, model.filter = NULL, plot.segme
     cowplot::plot_grid(plotlist = plot_list)
 }
 
+#' Plot the detected court patterns
+#'
+#' @param obj : as returned by [ov_detect_court()]
+#' @param index numeric: which patterns to plot
+#'
 #' @export
 ov_plot_patterns <- function(obj, index = 1){
     

@@ -35,11 +35,11 @@ ov_detect_court(
 
 \item{court_colour}{string: colour of the court. Default to "#c17257" (the orange-ish colour typical of synthetic-floor indoor courts)}
 
-\item{colour.distance}{string:}
+\item{colour.distance}{string: as for the \code{method} parameter of \code{\link[farver:compare_colour]{farver::compare_colour()}}}
 
-\item{n.alpha}{numeric:}
+\item{n.alpha}{numeric: length of alpha sequence to use}
 
-\item{lambda}{numeric:}
+\item{lambda}{numeric: as for \code{\link[T4transport:ipot]{T4transport::ipot()}}}
 }
 \value{
 A list of all possible homographies, with a score
@@ -53,30 +53,34 @@ if (interactive()) {
 
   ## Example 1
   image_file <- system.file("extdata/2019_03_01-KATS-BEDS-court.jpg", package = "ovcourt")
-  court_df <- ov_detect_court(image_file = image_file, score_distance = "pattern-based", lambda = 1e3)
+  court_df <- ov_detect_court(image_file = image_file, score_distance = "pattern-based",
+                              lambda = 1e3)
   ov_detect_court_plot(court_df, index = 1:4)
   ov_plot_patterns(court_df, index = 1)
-  
+
   ## Example 2 - with players
   image_file <- system.file("extdata/2019_03_01-KATS-BEDS-frame.png", package = "ovcourt")
-  court_df <- ov_detect_court(image_file = image_file, score_distance = "pattern-based", lambda = 1e3)
+  court_df <- ov_detect_court(image_file = image_file, score_distance = "pattern-based",
+                              lambda = 1e3)
   ov_detect_court_plot(court_df, index = 1:4, plot.all.endpoints = TRUE)
   ov_plot_patterns(court_df, index = 1)
-  
+
   ## Example 3 - Net issue
   image_file <- system.file("extdata/2022_10_22M_CH_TE.png", package = "ovideo")
-  court_df <- ov_detect_court(image_file = image_file, score_distance = "pattern-based", lambda = 1e3)
+  court_df <- ov_detect_court(image_file = image_file, score_distance = "pattern-based",
+                              lambda = 1e3)
   ov_detect_court_plot(court_df, index = 1:9, plot.all.endpoints = TRUE)
  ov_plot_patterns(court_df, index = 1)
- 
+
   ## Example 4 - Partial view and different court colour
   image_file <- system.file("extdata/2022_10_30M_TE_MV.png", package = "ovideo")
-  court_df <- ov_detect_court(image_file = image_file, line_colour = "black", 
-  court_colour = "#858582", score_distance = "pattern-based", lambda = 1e5)
+  court_df <- ov_detect_court(image_file = image_file, line_colour = "black",
+                              court_colour = "#858582", score_distance = "pattern-based",
+                              lambda = 1e5)
   ov_detect_court_plot(court_df, index = 1:4, plot.all.endpoints = TRUE)
 }
 
 }
 \seealso{
-\code{\link[=ov_transform_points]{ov_transform_points()}}, \code{\link[datavolley:dv_court]{datavolley::dv_court()}},  \code{\link[datavolley:ggcourt]{datavolley::ggcourt()}}
+\code{\link[ovideo:ov_transform_points]{ovideo::ov_transform_points()}}, \code{\link[datavolley:dv_court]{datavolley::dv_court()}},  \code{\link[datavolley:ggcourt]{datavolley::ggcourt()}}
 }

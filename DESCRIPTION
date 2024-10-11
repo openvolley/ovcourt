@@ -1,6 +1,6 @@
 Package: ovcourt
 Title: Court detection
-Version: 0.0.1
+Version: 0.0.2
 Authors@R: c(person(given = "Ben", family = "Raymond", role = c("aut")),
              person(given = "Adrien", family = "Ickowicz", role = c("aut", "cre"), email = "adrien@untan.gl"),
              person("openvolley.org", role = "org"))
@@ -13,36 +13,17 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 Depends: datavolley (> 0.12.999)
 Imports:
-    archive,
     assertthat,
-    av,
-    base64enc,
     cowplot,
-    digest,
     dplyr,
     farver,
-    fs,
     ggplot2,
-    htmltools,
-    httr,
-    knitr,
     image.LineSegmentDetector,
     imager,
-    jpeg,
-    jsonlite,
     magick,
-    R.utils,
-    rappdirs,
+    ovideo,
     rlist,
-    sys,
     tidyr,
     T4transport
-Suggests:
-    editry,
-    future,
-    future.apply,
-    ovdata,
-    remotes,
-    testthat
-Remotes: openvolley/datavolley, openvolley/ovdata, scienceuntangled/editry
-RoxygenNote: 7.2.1
+Remotes: openvolley/datavolley, openvolley/ovideo
+RoxygenNote: 7.3.2
